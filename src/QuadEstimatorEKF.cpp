@@ -170,6 +170,15 @@ VectorXf QuadEstimatorEKF::PredictState(VectorXf curState, float dt, V3F accel, 
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+  V3F RU = attitude.Rotate_BtoI(accel);
+  predictedState[0] += predictedState[3] * dt;
+  predictedState[1] += predictedState[4] * dt;
+  predictedState[2] += predictedState[5] * dt;
+  predictedState[3] += RU[0] * dt;
+  predictedState[4] += RU[1] * dt;
+  predictedState[5] += RU[2] * dt;
+  predictedState[5] -= CONST_GRAVITY * dt;
+  // yaw is already inregrated in x´complementary filrer update
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -197,6 +206,23 @@ MatrixXf QuadEstimatorEKF::GetRbgPrime(float roll, float pitch, float yaw)
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+
+ // RbgPrime(0, 0) = -cos(pitch) * sin(yaw) - sin(pitch) * cos(roll) * cos(yaw);
+ // RbgPrime(0, 1) = sin(pitch) * sin(yaw) - cos(pitch) * cos(roll) * cos(yaw);
+ // RbgPrime(0, 2) = sin(roll) * cos(yaw);
+ // RbgPrime(1, 0) = cos(pitch) * cos(yaw) - sin(pitch) * cos(roll) * sin(yaw);
+ // RbgPrime(1, 1) = -sin(pitch) * cos(yaw);
+ // RbgPrime(1, 2) = sin(roll) * sin(yaw);
+
+  RbgPrime(0, 0) = -cos(pitch) * sin(yaw);
+  RbgPrime(0, 1) = -sin(roll) * sin(pitch) * sin(yaw) - cos(roll) * cos(yaw);
+  RbgPrime(0, 2) = -cos(roll) * sin(pitch) * sin(yaw) + sin(roll) * cos(yaw);
+  RbgPrime(1, 0) = cos(pitch) * cos(yaw);
+  RbgPrime(1, 1) = sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw);
+  RbgPrime(1, 2) = cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw);
+  // RbgPrime[2, 0] is zero
+  // RbgPrime[2, 1] is zero
+  // RbgPrime[2, 2] is zero
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -243,6 +269,23 @@ void QuadEstimatorEKF::Predict(float dt, V3F accel, V3F gyro)
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+  // set g prime
+  gPrime(0, 3) = dt;
+  gPrime(1, 4) = dt;
+  gPrime(2, 5) = dt;
+  MatrixXf accelDt(3, 1);
+  accelDt(0, 0) = accel.x * dt;
+  accelDt(1, 0) = accel.y * dt; 
+  accelDt(2, 0) = accel.z * dt; 
+  MatrixXf RbgPuDt = RbgPrime * accelDt;
+  for (int i = 0; i < RbgPuDt.rows(); ++i) {
+      for (int j = 0; j < RbgPuDt.cols(); ++j) {
+          gPrime(3 + i, 5 + j) = RbgPuDt(i, j);
+      }
+  }
+
+  MatrixXf gPrimeT = gPrime.transpose();
+  ekfCov = (gPrime * ekfCov * gPrimeT) + Q;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
