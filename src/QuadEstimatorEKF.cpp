@@ -207,13 +207,13 @@ MatrixXf QuadEstimatorEKF::GetRbgPrime(float roll, float pitch, float yaw)
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
 
- // RbgPrime(0, 0) = -cos(pitch) * sin(yaw) - sin(pitch) * cos(roll) * cos(yaw);
- // RbgPrime(0, 1) = sin(pitch) * sin(yaw) - cos(pitch) * cos(roll) * cos(yaw);
- // RbgPrime(0, 2) = sin(roll) * cos(yaw);
- // RbgPrime(1, 0) = cos(pitch) * cos(yaw) - sin(pitch) * cos(roll) * sin(yaw);
- // RbgPrime(1, 1) = -sin(pitch) * cos(yaw);
- // RbgPrime(1, 2) = sin(roll) * sin(yaw);
-
+  //RbgPrime(0, 0) = -cos(pitch) * sin(yaw) - sin(pitch) * cos(roll) * cos(yaw);
+  //RbgPrime(0, 1) = sin(pitch) * sin(yaw) - cos(pitch) * cos(roll) * cos(yaw);
+  //RbgPrime(0, 2) = sin(roll) * cos(yaw);
+  //RbgPrime(1, 0) = cos(pitch) * cos(yaw) - sin(pitch) * cos(roll) * sin(yaw);
+  //RbgPrime(1, 1) = -sin(pitch) * cos(yaw);
+  //RbgPrime(1, 2) = sin(roll) * sin(yaw);
+  
   RbgPrime(0, 0) = -cos(pitch) * sin(yaw);
   RbgPrime(0, 1) = -sin(roll) * sin(pitch) * sin(yaw) - cos(roll) * cos(yaw);
   RbgPrime(0, 2) = -cos(roll) * sin(pitch) * sin(yaw) + sin(roll) * cos(yaw);
@@ -311,6 +311,14 @@ void QuadEstimatorEKF::UpdateFromGPS(V3F pos, V3F vel)
   //  - this is a very simple update
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+  hPrime.setIdentity();
+  zFromX(0) = ekfState(0);
+  zFromX(1) = ekfState(1);
+  zFromX(2) = ekfState(2);
+  zFromX(3) = ekfState(3);
+  zFromX(4) = ekfState(4);
+  zFromX(5) = ekfState(5);
+  
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   Update(z, hPrime, R_GPS, zFromX);
